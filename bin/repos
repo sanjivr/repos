@@ -44,6 +44,7 @@ def org_repos(token, org, server):
   headers = {}
   headers['Authorization'] = 'Basic %s' % authorization(token)
 
+  repos = []
   page = 1
   while True:
     logging.info('Page:%d' % page)
@@ -56,14 +57,13 @@ def org_repos(token, org, server):
       logging.debug("HTTP Response Code %d. Exiting" % r.status_code)
       sys.exit(-1)
     page += 1
-    repos = []
     org_repos = json.loads(r.text)
     if not org_repos:
-      sys.exit(0)
+        break
     for repo in org_repos:
         repos.append(repo['name'])
-    return repos
-
+  return repos
+      
 def generate_repos_def(server, org, repos):
     defn = "GIT_ORG_SSH:=git@%s:%s" % (server, org)
     defn += "\n"
