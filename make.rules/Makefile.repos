@@ -1,0 +1,5 @@
+include ./.Makefile.repos.def
+all: $(REPOS)
+$(REPOS):
+	git clone $(GIT_ORG_SSH)/$@.git
+

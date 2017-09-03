@@ -1,0 +1,140 @@
+#!/usr/bin/env python
+import sys
+import site
+import os
+sys.path.append(os.path.join(site.USER_BASE, 'lib', 'python', 'site-packages'))
+
+import base64
+import argparse
+import json
+
+import pip
+try:
+  import requests
+except ImportError:
+  pip.main(['install', '--user', 'requests'])
+  import requests
+
+try:
+    import yaml 
+except ImportError:
+    pip.main(['install', '--user', 'PyYAML'])
+    import yaml
+
+import logging
+
+def debug():
+  try:
+      import http.client as http_client
+  except ImportError:
+     # Python 2
+      import httplib as http_client
+  http_client.HTTPConnection.debuglevel = 1
+  logging.basicConfig()
+  logging.getLogger().setLevel(logging.DEBUG)
+  requests_log = logging.getLogger("requests.packages.urllib3")
+  requests_log.setLevel(logging.DEBUG)
+  requests_log.propagate = True
+
+def authorization(token):
+  return base64.encodestring('%s:%s' %(token, 'x-oauth-basic')).strip()
+
+def org_repos(token, org, server):
+  url='https://%s/api/v3/orgs/%s/repos' %(server, org)
+  headers = {}
+  headers['Authorization'] = 'Basic %s' % authorization(token)
+
+  page = 1
+  while True:
+    logging.info('Page:%d' % page)
+    params = {}
+    if page != 1:
+        params['rel'] = 'next'
+        params['page'] = page
+    r = requests.get(url, headers=headers, params=params, timeout = 5)
+    if r.status_code != 200:
+      logging.debug("HTTP Response Code %d. Exiting" % r.status_code)
+      sys.exit(-1)
+    page += 1
+    repos = []
+    org_repos = json.loads(r.text)
+    if not org_repos:
+      sys.exit(0)
+    for repo in org_repos:
+        repos.extend(repo['name'])
+    return repos
+
+def generate_repos_def(server, org, repos):
+    defn = "GIT_ORG_SSH:=git@%s:%s" % (server, org)
+    defn += "\n"
+    defn += "REPOS:="
+    defn += "\n"
+    for repo in repos:
+        defn += "REPOS += %s" % repo
+        defn += "\n"
+
+    return defn
+
+def read_token(token_file):
+    with open(token_file) as f:
+        token = f.read().strip()
+        logging.debug("Git Token %s" % token)
+        return token
+
+def read_config():
+    with open("./repos.yaml") as f:
+        config = yaml.safe_load(f)
+        return config
+
+def symlink(src, target):
+    try:
+        os.symlink(src, target)
+    except OSError:
+        #logging.error
+        pass
+
+def init():
+    config = read_config()
+    org_makefile_src_path = os.path.expanduser("~/.repos/Makefile.orgs")
+    repo_makefile_src_path = os.path.expanduser("~/.repos/Makefile.repos")
+    symlink(org_makefile_src_path , "./.Makefile")
+    for server, server_config in config.items():
+        token_file_path = os.path.expanduser(server_config['token'])
+        token = read_token(token_file_path)
+        for org in server_config['orgs']:
+            try:
+                os.makedirs("./%s" % org)
+            except OSError:
+                #logging.info
+                pass
+            symlink(repo_makefile_src_path, "./%s/.Makefile" % org)
+            repos = org_repos(token, org, server)
+            repos_def = generate_repos_def(server, org, repos)
+            with open('./%s/.Makefile.repos.def' % org, 'w') as f:
+                f.write(repos_def)
+
+def clone():
+    # make -f ./Makefile
+    pass
+def update():
+    # make -f ./Makefile up
+    pass
+
+def main():
+  parser = argparse.ArgumentParser(description='repositories in a git organization')
+  parser.add_argument("--init", help="setup organizations for clone and update", action="store_true")
+  parser.add_argument("--clone", help="clone any missing organization repositories", action="store_true")
+  parser.add_argument("--update", help="update master branch on all repositories", action="store_true")
+  parser.add_argument("--clean", help="clean repos metadata", action="store_true")
+  parser.add_argument("-d", "--debug", help="print debug information", action="store_true")
+  args=parser.parse_args()
+  
+  if args.debug:
+    debug()
+
+  if args.init:
+      init()
+
+
+if __name__ == "__main__":
+    main()

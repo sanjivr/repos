@@ -1,0 +1,5 @@
+ORGS := $(wildcard */)
+all: $(ORGS)
+$(ORGS):
+	$(MAKE) -C $@ -f ./.Makefile
+.PHONY: all $(ORGS)

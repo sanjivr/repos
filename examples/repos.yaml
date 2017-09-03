@@ -1,0 +1,6 @@
+git.corp.yahoo.com:
+    token: ./.corp.token
+    orgs:
+        - dhrainbow
+        - dhrainbow-archive
+        - sanjivr
