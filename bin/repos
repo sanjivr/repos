@@ -61,7 +61,7 @@ def org_repos(token, org, server):
     if not org_repos:
       sys.exit(0)
     for repo in org_repos:
-        repos.extend(repo['name'])
+        repos.append(repo['name'])
     return repos
 
 def generate_repos_def(server, org, repos):
