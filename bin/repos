@@ -2,6 +2,7 @@
 import sys
 import site
 import os
+# `pip install --user` installs into this path
 sys.path.append(os.path.join(site.USER_BASE, 'lib', 'python', 'site-packages'))
 from subprocess import call
 
@@ -16,7 +17,7 @@ except ImportError:
   import requests
 
 try:
-    import yaml 
+    import yaml
 except ImportError:
     pip.main(['install', '--user', 'PyYAML'])
     import yaml
@@ -39,8 +40,8 @@ def debug():
 def authorization(token):
   return base64.encodestring('%s:%s' %(token, 'x-oauth-basic')).strip()
 
-def org_repos(token, org, server):
-  url='https://%s/api/v3/orgs/%s/repos' %(server, org)
+def org_repos(token, org, server, org_type):
+  url='https://%s/api/v3/%s/%s/repos' %(server, org_type, org)
   headers = {}
   headers['Authorization'] = 'Basic %s' % authorization(token)
 
@@ -55,7 +56,7 @@ def org_repos(token, org, server):
     r = requests.get(url, headers=headers, params=params, timeout = 5)
     if r.status_code != 200:
       logging.debug("HTTP Response Code %d. Exiting" % r.status_code)
-      sys.exit(-1)
+      break
     page += 1
     org_repos = json.loads(r.text)
     if not org_repos:
@@ -63,7 +64,16 @@ def org_repos(token, org, server):
     for repo in org_repos:
         repos.append(repo['name'])
   return repos
-      
+
+def generate_orgs_def(orgs):
+    defn = "ORGS:="
+    defn += "\n"
+    for org in orgs:
+        defn += "ORGS += %s" % org
+        defn += "\n"
+    with open("./.Makefile.orgs.def", 'w') as f:
+        f.write(defn)
+
 def generate_repos_def(server, org, repos):
     defn = "GIT_ORG_SSH:=git@%s:%s" % (server, org)
     defn += "\n"
@@ -72,8 +82,8 @@ def generate_repos_def(server, org, repos):
     for repo in repos:
         defn += "REPOS += %s" % repo
         defn += "\n"
-
-    return defn
+    with open('./%s/.Makefile.repos.def' % org, 'w') as f:
+        f.write(defn)
 
 def read_token(token_file):
     with open(token_file) as f:
@@ -98,27 +108,36 @@ def init():
     org_makefile_src_path = os.path.expanduser("~/.repos/Makefile.orgs")
     repo_makefile_src_path = os.path.expanduser("~/.repos/Makefile.repos")
     symlink(org_makefile_src_path , "./.Makefile")
+    orgs = []
     for server, server_config in config.items():
         token_file_path = os.path.expanduser(server_config['token'])
         token = read_token(token_file_path)
-        for org in server_config['orgs']:
+        server_orgs = []
+        if server_config['orgs']:
+            server_orgs.extend(server_config['orgs'])
+        if server_config['users']:
+            server_orgs.extend(server_config['users'])
+        orgs.extend(server_orgs)
+        for org in server_orgs:
             try:
                 os.makedirs("./%s" % org)
-            except OSError:
-                #logging.info
+            except OSError as e:
+                logging.info(e)
                 pass
             symlink(repo_makefile_src_path, "./%s/.Makefile" % org)
-            repos = org_repos(token, org, server)
-            repos_def = generate_repos_def(server, org, repos)
-            with open('./%s/.Makefile.repos.def' % org, 'w') as f:
-                f.write(repos_def)
+            org_type = "orgs"
+            if org in server_config['users']:
+                org_type = "users"
+            repos = org_repos(token, org, server, org_type)
+            generate_repos_def(server, org, repos)
+    generate_orgs_def(orgs)
 
 def sync ():
-    call(["make", "-f" , "./Makefile"])
+    call(["make", "-f" , "./.Makefile", "-j" , "5"])
 def update():
-    call(["make", "-f" , "./Makefile","update"])
+    call(["make", "-f" , "./.Makefile","update", "-j" , "5"])
 def clean():
-    call(["make", "-f" , "./Makefile","clean"])
+    call(["make", "-f" , "./.Makefile","clean", "-j", "5"])
 
 
 def main():
@@ -130,7 +149,7 @@ def main():
   group.add_argument("-up","--update", help="update master branch on all repositories", action="store_true")
   group.add_argument("-x", "--clean", help="undo initialization", action="store_true")
   args=parser.parse_args()
-  
+
   if args.debug:
     debug()
 

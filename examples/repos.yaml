@@ -3,4 +3,5 @@ git.corp.yahoo.com:
     orgs:
         - dhrainbow
         - dhrainbow-archive
+    users:
         - sanjivr

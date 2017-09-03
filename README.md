@@ -1,12 +1,3 @@
-Each top level git directory will contain
-
-* repos.yaml
-    * server
-        * token
-        * orgs
-            * org1
-            * org2
-
 ## Installation
 
 * Executable `repos` into `~/bin/`
@@ -48,6 +39,8 @@ optional arguments:
     pwd
     ls `pwd/repos.yaml`
     cp ~/.repos/Makefile.orgs ./.Makefile
+    # Generated 
+    ./.Makefile.repos.def
     mkdir -p ./${ORG}
     cp ~/.repos/Makefile.repos ./${ORG}/.Makefile
     # Generated

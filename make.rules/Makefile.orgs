@@ -1,5 +1,16 @@
-ORGS := $(wildcard */)
+#ORGS := $(wildcard */)
+include ./.Makefile.orgs.def
 all: $(ORGS)
 $(ORGS):
 	$(MAKE) -C $@ -f ./.Makefile
-.PHONY: all $(ORGS)
+
+update: $(addsuffix /update, $(ORGS))
+
+%/update:
+	$(MAKE) -C $* -f ./.Makefile update
+
+clean:
+	find . -name ".Makefile*" -exec rm {} \;
+
+
+.PHONY: all $(ORGS) update clean
