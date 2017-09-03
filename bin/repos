@@ -3,11 +3,11 @@ import sys
 import site
 import os
 sys.path.append(os.path.join(site.USER_BASE, 'lib', 'python', 'site-packages'))
+from subprocess import call
 
 import base64
 import argparse
 import json
-
 import pip
 try:
   import requests
@@ -113,20 +113,22 @@ def init():
             with open('./%s/.Makefile.repos.def' % org, 'w') as f:
                 f.write(repos_def)
 
-def clone():
-    # make -f ./Makefile
-    pass
+def sync ():
+    call(["make", "-f" , "./Makefile"])
 def update():
-    # make -f ./Makefile up
-    pass
+    call(["make", "-f" , "./Makefile","update"])
+def clean():
+    call(["make", "-f" , "./Makefile","clean"])
+
 
 def main():
   parser = argparse.ArgumentParser(description='repositories in a git organization')
-  parser.add_argument("--init", help="setup organizations for clone and update", action="store_true")
-  parser.add_argument("--clone", help="clone any missing organization repositories", action="store_true")
-  parser.add_argument("--update", help="update master branch on all repositories", action="store_true")
-  parser.add_argument("--clean", help="clean repos metadata", action="store_true")
   parser.add_argument("-d", "--debug", help="print debug information", action="store_true")
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument("-i", "--init", help="initialize with repos.yaml", action="store_true")
+  group.add_argument("-s", "--sync", help="clone all repositories in organizations", action="store_true")
+  group.add_argument("-up","--update", help="update master branch on all repositories", action="store_true")
+  group.add_argument("-x", "--clean", help="undo initialization", action="store_true")
   args=parser.parse_args()
   
   if args.debug:
@@ -134,7 +136,11 @@ def main():
 
   if args.init:
       init()
-
-
+  elif args.sync:
+      sync()
+  elif args.update:
+      update()
+  elif args.clean:
+        clean()
 if __name__ == "__main__":
     main()
