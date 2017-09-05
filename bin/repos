@@ -71,7 +71,7 @@ def generate_orgs_def(orgs):
     for org in orgs:
         defn += "ORGS += %s" % org
         defn += "\n"
-    with open("./.Makefile.orgs.def", 'w') as f:
+    with open(".repos/orgs.def.mk", 'w') as f:
         f.write(defn)
 
 def generate_repos_def(server, org, repos):
@@ -82,7 +82,7 @@ def generate_repos_def(server, org, repos):
     for repo in repos:
         defn += "REPOS += %s" % repo
         defn += "\n"
-    with open('./%s/.Makefile.repos.def' % org, 'w') as f:
+    with open('./%s/.repos/repos.def.mk' % org, 'w') as f:
         f.write(defn)
 
 def read_token(token_file):
@@ -105,9 +105,14 @@ def symlink(src, target):
 
 def init():
     config = read_config()
-    org_makefile_src_path = os.path.expanduser("~/.repos/Makefile.orgs")
-    repo_makefile_src_path = os.path.expanduser("~/.repos/Makefile.repos")
-    symlink(org_makefile_src_path , "./.Makefile")
+    org_makefile_src_path = os.path.expanduser("/usr/local/share/repos/orgs.mk")
+    repo_makefile_src_path = os.path.expanduser("/usr/local/share/repos/repos.mk")
+    try:
+        os.makedirs(".repos")
+    except OSError as e:
+        logging.info(e)
+        pass
+    symlink(org_makefile_src_path , ".repos/Makefile")
     orgs = []
     for server, server_config in config.items():
         token_file_path = os.path.expanduser(server_config['token'])
@@ -120,11 +125,11 @@ def init():
         orgs.extend(server_orgs)
         for org in server_orgs:
             try:
-                os.makedirs("./%s" % org)
+                os.makedirs("%s/.repos/" % org)
             except OSError as e:
                 logging.info(e)
                 pass
-            symlink(repo_makefile_src_path, "./%s/.Makefile" % org)
+            symlink(repo_makefile_src_path, "%s/.repos/Makefile" % org)
             org_type = "orgs"
             if org in server_config['users']:
                 org_type = "users"
@@ -133,11 +138,11 @@ def init():
     generate_orgs_def(orgs)
 
 def sync ():
-    call(["make", "-f" , "./.Makefile", "-j" , "5"])
+    call(["make", "-f" , ".repos/Makefile", "-j" , "5"])
 def update():
-    call(["make", "-f" , "./.Makefile","update", "-j" , "5"])
+    call(["make", "-f" , ".repos/Makefile","update", "-j" , "5"])
 def clean():
-    call(["make", "-f" , "./.Makefile","clean", "-j", "5"])
+    call(["make", "-f" , ".repos/Makefile","clean", "-j", "5"])
 
 
 def main():

@@ -1,11 +1,19 @@
 ## Installation
 
-* Executable `repos` into `~/bin/`
-* Makefile rules into `~/.repos/`
+```
+make install
+```
+
+`Note: installs into /usr/local`
 
 ## Usage
 
 * YAML configuration : `repos.yaml`
+
+```
+➜ tree -L 1 | grep "repos.yaml"
+├── repos.yaml
+```
 
 ```
 git.corp.yahoo.com:
@@ -13,6 +21,7 @@ git.corp.yahoo.com:
     orgs:
         - dhrainbow
         - dhrainbow-archive
+    users:
         - sanjivr
 ```
 
@@ -35,32 +44,36 @@ optional arguments:
 ## Internals
 
 ### init
+
 ```
-    pwd
-    ls `pwd/repos.yaml`
-    cp ~/.repos/Makefile.orgs ./.Makefile
-    # Generated 
-    ./.Makefile.repos.def
-    mkdir -p ./${ORG}
-    cp ~/.repos/Makefile.repos ./${ORG}/.Makefile
-    # Generated
-    ${ORG}/.Makefile.repos.def
+➜ tree .repos dhrainbow/.repos dhrainbow-archive/.repos sanjivr/.repos
+.repos
+├── Makefile -> /usr/local/share/repos/orgs.mk
+└── orgs.def.mk
+dhrainbow/.repos
+├── Makefile -> /usr/local/share/repos/repos.mk
+└── repos.def.mk
+dhrainbow-archive/.repos
+├── Makefile -> /usr/local/share/repos/repos.mk
+└── repos.def.mk
+sanjivr/.repos
+├── Makefile -> /usr/local/share/repos/repos.mk
+└── repos.def.mk
 ```
 
 ### sync
 ```
-    make -f ./.Makefile
+    make -f ./repos/Makefile
 ```
 
 ### update
 ```
-    make -f ./Makefile update
+    make -f ./repos/Makefile update
 ```
 
 ### clean
 ```
-    make -f ./Makefile clean
-        rm ./${ORG}/.Makefile.repos.def
-        rm ./${ORG}/.Makefile
-        rm ./Makefile
+    make -f ./repos/Makefile clean
+        find . -name ".repos" -type d
+
 ```
