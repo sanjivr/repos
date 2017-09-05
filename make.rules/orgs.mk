@@ -10,7 +10,7 @@ update: $(addsuffix /update, $(ORGS))
 	$(MAKE) -C $* -f .repos/Makefile update
 
 clean:
-	find . -name ".repos" -type d -exec rm {} \;
+	find . -name ".repos" -type d -exec rm -rf {} \;
 
 
 .PHONY: all $(ORGS) update clean
