@@ -74,6 +74,6 @@ sanjivr/.repos
 ### clean
 ```
     make -f ./repos/Makefile clean
-        find . -name ".repos" -type d
+        find . -name ".repos" -type d -print | xargs rm -rf
 
 ```

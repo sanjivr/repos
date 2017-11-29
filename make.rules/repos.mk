@@ -5,5 +5,11 @@ $(REPOS):
 
 update: $(addsuffix /update, $(REPOS))
 %/update:
-	cd $* && git branch
+	cd $*; \
+	git stash; \
+	git checkout master; \
+	git pull; \
+	git checkout -; \
+	git stash pop || true; 
+
 .PHONY: %/update
