@@ -9,17 +9,21 @@ from subprocess import call
 import base64
 import argparse
 import json
-import pip
+try:
+  from pip import main as pipmain
+except ImportError:
+  from pip._internal import main as pipmain
+
 try:
   import requests
 except ImportError:
-  pip.main(['install', '--user', 'requests'])
+  pipmain(['install', '--user', 'requests'])
   import requests
 
 try:
     import yaml
 except ImportError:
-    pip.main(['install', '--user', 'PyYAML'])
+    pipmain(['install', '--user', 'PyYAML'])
     import yaml
 
 import logging
