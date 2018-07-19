@@ -5,9 +5,6 @@ $(REPOS):
 
 update: $(addsuffix /update, $(REPOS))
 %/update:
-	cd $*; \
-	git checkout master; \
-	git pull; \
-	git checkout -; \
+	@cd $* && git checkout master > /dev/null 2>&1 && git pull > /dev/null 2>&1 &&  git checkout - > /dev/null 2>&1 && echo "$* done" || echo "$* failed"
 
 .PHONY: %/update
