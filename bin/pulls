@@ -21,8 +21,14 @@ except ImportError:
   pipmain(['install', '--user', 'requests'])
   import requests
 
+try:
+    import yaml
+except ImportError:
+    pipmain(['install', '--user', 'PyYAML'])
+    import yaml
+
+
 import logging
-from pprint import pprint
 
 def debug():
   try:
@@ -75,6 +81,12 @@ def read_token(token_file):
         logging.debug("Git Token %s" % token)
         return token
 
+def read_config():
+    with open("./pulls.yaml") as f:
+        config = yaml.safe_load(f)
+        return config
+
+
 def pull_details(token, url):
     headers = {}
     headers['Authorization'] = 'Basic %s' % authorization(token)
@@ -88,9 +100,10 @@ def pull_details(token, url):
 
 def main():
     #debug()
-
-    token = read_token("path to token file")
-    pulls = org_pulls(token, 'git org', 'git server')
+    config = read_config()
+    token_file_path = os.path.expanduser(config['token'])
+    token = read_token(token_file_path)
+    pulls = org_pulls(token, config['org'], config['server'])
     reports = []
     for pull in pulls:
         if 'pull_request' in pull:
