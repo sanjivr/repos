@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import site
 import os
@@ -42,7 +42,7 @@ def debug():
   requests_log.propagate = True
 
 def authorization(token):
-  return base64.encodestring('%s:%s' %(token, 'x-oauth-basic')).strip()
+  return base64.b64encode(bytes(f"{token}:x-oauth-basic", 'UTF-8')).decode().strip()
 
 def org_repos(token, org, server, org_type):
   url='https://%s/api/v3/%s/%s/repos' %(server, org_type, org)
