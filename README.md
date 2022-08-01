@@ -36,7 +36,7 @@ optional arguments:
   -d, --debug    print debug information
   -i, --init     initialize with repos.yaml
   -s, --sync     clone all repositories in organizations
-  -up, --update  update master branch on all repositories
+  -up, --update  update master/main branch on all repositories
   -x, --clean    undo initialization
 ```
 

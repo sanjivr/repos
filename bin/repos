@@ -155,7 +155,7 @@ def main():
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument("-i", "--init", help="initialize with repos.yaml", action="store_true")
   group.add_argument("-s", "--sync", help="clone all repositories in organizations", action="store_true")
-  group.add_argument("-up","--update", help="update master branch on all repositories", action="store_true")
+  group.add_argument("-up","--update", help="update master/main branch on all repositories", action="store_true")
   group.add_argument("-x", "--clean", help="undo initialization", action="store_true")
   args=parser.parse_args()
 
